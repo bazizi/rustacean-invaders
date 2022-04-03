@@ -46,5 +46,8 @@ features = [
   'Window',
   'console',
   'Crypto',
-  'HtmlImageElement'
+  'HtmlImageElement',
+  'EventTarget',
+  'MouseEvent',
+  'KeyboardEvent'
 ]
