@@ -1,39 +1,19 @@
+mod utils;
 mod vec2;
 mod spaceship;
-mod utils;
+mod webutils;
 
+// local
 use vec2::Vec2;
 use spaceship::SpaceShip;
+use webutils::*;
+
+// external
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use std::cell::RefCell;
 use std::cell::Cell;
 use std::rc::Rc;
-
-#[wasm_bindgen]
-extern {
-    fn alert(s: &str);
-}
-
-fn window() -> web_sys::Window {
-    web_sys::window().expect("no global `window` exists")
-}
-
-fn document() -> web_sys::Document {
-    window()
-        .document()
-        .expect("should have a document on window")
-}
-
-fn log(str : &str) {
-    web_sys::console::log_1(&JsValue::from_str(str));
-}
-
-fn request_animation_frame(f: &Closure<dyn FnMut()>) {
-    window()
-        .request_animation_frame(f.as_ref().unchecked_ref())
-        .expect("should register `requestAnimationFrame` OK");
-}
 
 #[wasm_bindgen]
 pub fn main()
@@ -51,39 +31,36 @@ pub fn main()
     
     log(&format!("Canvas size: {}x{}", canvas.width(), canvas.height()).to_string());
     canvas_context.fill_rect(0., 0., 500., 500.);
-    let image = document().get_element_by_id("spaceship")
+    let spaceship_image = document().get_element_by_id("spaceship")
     .unwrap()
     .dyn_into::<web_sys::HtmlImageElement>()
     .unwrap();  
-    image.set_width(50);
-    image.set_height(50);
 
-    let mut space_ship = SpaceShip::new();
-    let movement = Rc::new(Cell::new(Vec2{x: 0.}));
+    let mut space_ship = SpaceShip::new((canvas.width() / 2) as f64, canvas.height() as f64 - 50.);
+    let movement_force = Rc::new(Cell::new(Vec2::new()));
 
     {
-        let movement = movement.clone();  
+        let movement_force = movement_force.clone();  
         let closure = Closure::wrap(Box::new(move |event: web_sys::KeyboardEvent| {
             if event.key() == "ArrowRight"
             {
-                movement.set(Vec2 { x: 1. });
+                movement_force.set(Vec2 { x: 100., y: 0.});
             }
             else if event.key() == "ArrowLeft"
             {
-                movement.set(Vec2 { x: -1. });
+                movement_force.set(Vec2 { x: -100., y: 0. });
             }
         }) as Box<dyn FnMut(_)>);
         document().add_event_listener_with_callback("keydown", closure.as_ref().unchecked_ref()).unwrap();
         closure.forget();
     }
 
-
     {
-        let movement = movement.clone();  
+        let movement_force = movement_force.clone();  
         let closure = Closure::wrap(Box::new(move |event: web_sys::KeyboardEvent| {
             if event.key() == "ArrowRight" || event.key() == "ArrowLeft"
             {
-                movement.set(Vec2 { x: 0. });
+                movement_force.set(Vec2::new());
             }
         }) as Box<dyn FnMut(_)>);
         document().add_event_listener_with_callback("keyup", closure.as_ref().unchecked_ref()).unwrap();
@@ -107,9 +84,9 @@ pub fn main()
     let f = Rc::new(RefCell::new(None));
     let g = f.clone();
     *g.borrow_mut() = Some(Closure::wrap(Box::new(move || {
-        space_ship.update_position(movement.get());
+        space_ship.add_force(movement_force.get());
         canvas_context.fill_rect(0., 0., canvas.width() as f64, canvas.height() as f64);
-        canvas_context.draw_image_with_html_image_element(&image, space_ship.get_x(), canvas.height() as f64 - 50.).unwrap();        
+        canvas_context.draw_image_with_html_image_element_and_dw_and_dh(&spaceship_image, space_ship.get_position().x, space_ship.get_position().y, 50., 50.).unwrap();        
 
         // Schedule ourself for another requestAnimationFrame callback.
         request_animation_frame(f.borrow().as_ref().unwrap());

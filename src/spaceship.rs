@@ -1,27 +1,47 @@
 use crate::vec2::Vec2;
+use crate::webutils::*;
 
 pub struct SpaceShip
 {
-    x: f64,
-    velocity: f64
+    position: Vec2,
+    velocity: Vec2,
+    mass: f64,
+    acceleration: Vec2,
+    max_velocity: f64,
 }
 
 impl SpaceShip {
-    pub fn new() -> Self
+    pub fn new(x: f64, y: f64) -> Self
     {
         Self{
-            x : 0.,
-            velocity: 5.
+            position : Vec2 { x, y },
+            velocity: Vec2::new(),
+            mass: 5.,
+            acceleration: Vec2::new(),
+            max_velocity: 20.,
+            
         }
     }
 
-    pub fn update_position(&mut self, direction : Vec2)
+    pub fn add_force(&mut self, force : Vec2)
     {
-        self.x = self.x + self.velocity * direction.x;
+        self.acceleration = force / self.mass;
+ 
+        self.position = self.position + self.velocity;
+        if self.velocity.magnitude() < self.max_velocity
+        {
+            self.velocity += self.acceleration;      
+        }
+
+        self.velocity = self.velocity / 2.; // drag
+
+        self.position.clamp(Vec2{x: 0., y: 0.}, Vec2{x: 750., y: 600.});
+
+        log(&format!("spaceship: (position={}, velocity={})", self.position, self.velocity));
     }
 
-    pub fn get_x(&self) -> f64
+    pub fn get_position(&self) -> Vec2
     {
-        self.x
+        self.position
     }
 }
