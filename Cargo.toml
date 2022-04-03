@@ -48,6 +48,6 @@ features = [
   'Crypto',
   'HtmlImageElement',
   'EventTarget',
-  'MouseEvent',
-  'KeyboardEvent'
+  'KeyboardEvent',
+  'HtmlAudioElement'
 ]

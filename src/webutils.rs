@@ -11,7 +11,7 @@ pub fn document() -> web_sys::Document {
         .expect("should have a document on window")
 }
 
-pub fn log(str : &str) {
+pub fn log(str: &str) {
     web_sys::console::log_1(&JsValue::from_str(str));
 }
 
